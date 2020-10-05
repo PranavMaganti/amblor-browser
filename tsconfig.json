@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "baseUrl": "./src",
+        "paths": {
+            "~*": [
+                "./*"
+            ]
+        },
+        "pretty": true,
+        "outDir": "dist/js",
+        "sourceMap": true,
+        "sourceRoot": "src",
+        "rootDir": "./src",
+    },
+    "include": [
+        "src/connectors/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}

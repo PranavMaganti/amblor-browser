@@ -1,0 +1,22 @@
+{
+    "manifest_version": 2,
+    "name": "amblor",
+    "description": "A music scrobbling client for amblor",
+    "version": "1.0.0",
+    "permissions": [
+        "tabs",
+        "activeTab",
+        "<all_urls>"
+    ],
+    "background": {
+        "scripts": [
+            "background.js"
+        ],
+        "persistent": false
+    },
+
+    "content_scripts": [{
+        "matches": ["<all_urls>"],
+        "js": ["connectors/DummyConnector.js"]
+      }]
+}

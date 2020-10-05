@@ -1,0 +1,38 @@
+{
+  "name": "amblor",
+  "version": "1.0.0",
+  "description": "A music scrobbling client for amblor",
+  "author": "Pranav Maganti(vanpra)",
+  "license": "MIT",
+  "engines": {
+    "node": "11.0.0"
+  },
+  "scripts": {
+    "build": "cp public/manifest.json dist/ && parcel build src/background.ts src/connectors/*.ts --no-hmr —public-url ./",
+    "watch": "cp public/manifest.json dist/ && parcel watch src/background.ts src/connectors/*.ts --no-hmr —public-url ./",
+    "start": "web-ext run -t chromium -s dist/"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/copy-webpack-plugin": "^6.0.0",
+    "@types/node": "^14.11.2",
+    "@typescript-eslint/eslint-plugin": "^4.3.0",
+    "@typescript-eslint/parser": "^4.3.0",
+    "copy-webpack-plugin": "^6.1.1",
+    "eslint": "^7.10.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-react": "^7.21.2",
+    "parcel-bundler": "^1.12.4",
+    "prettier": "^2.1.2",
+    "prettier-webpack-plugin": "^1.2.0",
+    "ts-loader": "^8.0.4",
+    "typescript": "^4.0.3",
+    "web-ext": "^5.1.0",
+    "webextension-polyfill-ts": "^0.20.0",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12"
+  },
+  "browserslist": [
+    "last 2 Chrome version"
+  ]
+}
