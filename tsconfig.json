@@ -1,23 +1,14 @@
 {
-    "compilerOptions": {
-        "module": "commonjs",
-        "target": "es6",
-        "baseUrl": "./src",
-        "paths": {
-            "~*": [
-                "./*"
-            ]
-        },
-        "pretty": true,
-        "outDir": "dist/js",
-        "sourceMap": true,
-        "sourceRoot": "src",
-        "rootDir": "./src",
-    },
-    "include": [
-        "src/connectors/*"
-    ],
-    "exclude": [
-        "node_modules"
-    ]
+  "compilerOptions": {
+    "strict": true,
+    "module": "commonjs",
+    "target": "es6",
+    "esModuleInterop": true,
+    "sourceMap": false,
+    "outDir": "dist/js",
+    "noEmitOnError": true,
+    "jsx": "react",
+    "typeRoots": ["node_modules/@types"],
+  },
+  "include": ["src/**/*"]
 }

@@ -4,33 +4,46 @@
   "description": "A music scrobbling client for amblor",
   "author": "Pranav Maganti(vanpra)",
   "license": "MIT",
+  "staticFiles": {
+    "staticPath": "public",
+    "distDir": "dist"
+  },
   "engines": {
-    "node": "11.0.0"
+    "node": "15.12.0"
   },
   "scripts": {
-    "build": "cp public/manifest.json dist/ && parcel build src/background.ts src/connectors/*.ts --no-hmr —public-url ./",
-    "watch": "cp public/manifest.json dist/ && parcel watch src/background.ts src/connectors/*.ts --no-hmr —public-url ./",
-    "start": "web-ext run -t chromium -s dist/"
+    "watch": "parcel watch src/background.ts src/connectors/*.ts",
+    "build": "parcel build src/background.ts src/connectors/*.ts",
+    "clean": "rimraf dist",
+    "test": "npx jest",
+    "style": "prettier --write \"src/**/*.{ts,tsx}\""
   },
-  "dependencies": {},
+  "dependencies": {
+    "react": "^17.0.1",
+    "react-dom": "^17.0.1"
+  },
   "devDependencies": {
-    "@types/copy-webpack-plugin": "^6.0.0",
-    "@types/node": "^14.11.2",
-    "@typescript-eslint/eslint-plugin": "^4.3.0",
-    "@typescript-eslint/parser": "^4.3.0",
-    "copy-webpack-plugin": "^6.1.1",
-    "eslint": "^7.10.0",
-    "eslint-config-google": "^0.14.0",
-    "eslint-plugin-react": "^7.21.2",
-    "parcel-bundler": "^1.12.4",
-    "prettier": "^2.1.2",
-    "prettier-webpack-plugin": "^1.2.0",
-    "ts-loader": "^8.0.4",
-    "typescript": "^4.0.3",
-    "web-ext": "^5.1.0",
-    "webextension-polyfill-ts": "^0.20.0",
-    "webpack": "^4.44.2",
-    "webpack-cli": "^3.3.12"
+    "@parcel/transformer-typescript-tsc": "^2.0.0-beta.2",
+    "@parcel/validator-typescript": "^2.0.0-alpha.3",
+    "@types/chrome": "0.0.100",
+    "@types/jest": "^25.1.4",
+    "@types/node": "^14.14.35",
+    "@types/react": "^17.0.0",
+    "@types/react-dom": "^17.0.0",
+    "copy-webpack-plugin": "^6.1.0",
+    "jest": "^26.6.3",
+    "parcel": "^2.0.0-beta.2",
+    "parcel-reporter-static-files-copy": "^1.2.1",
+    "prettier": "^2.2.1",
+    "rimraf": "^3.0.2 ",
+    "ts-jest": "^25.2.1 ",
+    "ts-loader": "^6.2.1",
+    "typescript": "~3.8.3 ",
+    "web-ext": "^6.0.0",
+    "webextension-polyfill-ts": "^0.25.0",
+    "webpack": "^4.44.1",
+    "webpack-cli": "~3.3.11",
+    "webpack-merge": "~4.2.2"
   },
   "browserslist": [
     "last 2 Chrome version"
