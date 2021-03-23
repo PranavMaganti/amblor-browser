@@ -1,16 +1,23 @@
-export abstract class Connector {
+import { browser } from "webextension-polyfill-ts";
+import { constants } from "../Constants";
+
+export abstract class BaseConnector {
   abstract playerSelector: string;
 
   abstract getCurrentState(): PlayerState;
 
   playerState: PlayerState = {} as PlayerState;
-  playerObserver!: MutationObserver;
+  playerObserver: MutationObserver = new MutationObserver(() => {
+    this.playerState = this.getCurrentState();
+    console.log(this.playerState);
+  });
+
+  constructor() {
+    this.setupMessageListener();
+  }
 
   setupObserver() {
     const target = document.querySelector(this.playerSelector);
-    this.playerObserver = new MutationObserver(() => {
-      this.onPlayerStateChange();
-    });
     const observerConfig = {
       childList: true,
       subtree: true,
@@ -20,9 +27,10 @@ export abstract class Connector {
     this.playerObserver.observe(target!!, observerConfig);
   }
 
-  onPlayerStateChange(): void {
-    this.playerState = this.getCurrentState();
-    console.log(this.playerState);
+  setupMessageListener(): void {
+    browser.runtime.onMessage.addListener(
+      async (data, _) => data == constants.injection_check
+    );
   }
 }
 
@@ -35,15 +43,3 @@ export interface PlayerState {
   totalDuration: number;
   currentDuration: number;
 }
-
-export interface ConnectorInfo {
-  file: string;
-  pattern: string;
-}
-
-export const connectors: ConnectorInfo[] = [
-  {
-    file: "connectors/YoutubeMusic.js",
-    pattern: ".*://music.youtube.com/.*",
-  },
-];

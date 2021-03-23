@@ -1,7 +1,7 @@
-import { Connector, PlayerState } from "./BaseConnector";
+import { BaseConnector, PlayerState } from "./BaseConnector";
 import { timeToSeconds } from "./Util";
 
-class YoutubeMusic extends Connector {
+class YoutubeMusic extends BaseConnector {
   nameSelector: string = "ytmusic-player-bar title";
   artistAlbumSelector: string = "ytmusic-player-bar byline";
   playerSelector: string = "ytmusic-player-bar";
@@ -20,20 +20,16 @@ class YoutubeMusic extends Connector {
     const timeNode = document.getElementsByClassName(this.timeSelector)[0];
 
     const splitTime = timeNode.textContent?.split("/");
-    const songInfo = artistAlbumNode.getElementsByTagName("a");
+    const songInfo = [...artistAlbumNode.getElementsByTagName("a")].map(
+      (value) => value.textContent!!
+    );
 
-    let artist = "";
     let album = "";
 
-    if (songInfo.length == 1) {
-      artist = songInfo[0].textContent!!;
-    } else {
-      for (let i = 0; i < songInfo.length - 1; i++) {
-        if (i != 0) artist += ",";
-        artist += songInfo[i].textContent;
-      }
-
-      album += songInfo[songInfo.length - 1].textContent;
+    // TODO: Currently assumes that there will be at least 1 item
+    let artist = songInfo.slice(0, Math.max(songInfo.length - 1, 1)).join(",")
+    if (songInfo.length != 1) {
+      album = songInfo[songInfo.length - 1];
     }
 
     return {
