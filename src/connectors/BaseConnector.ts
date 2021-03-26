@@ -6,6 +6,7 @@ export abstract class BaseConnector {
   abstract getArtistName(): string;
   abstract getAlbumName(): string;
   abstract getDurationData(): [number, number];
+  abstract getIsPlaying(): boolean;
 
   playerSelector: string;
   playerState: PlayerState = {} as PlayerState;
@@ -17,12 +18,17 @@ export abstract class BaseConnector {
       return;
     }
 
-    if (!this.areTracksTheSame(this.playerState, newState)) {
+    const tracksSame = this.areTracksTheSame(this.playerState, newState);
+    const playbackChange = this.playerState.isPlaying != newState?.isPlaying;
+
+    if (!tracksSame) {
       /* TODO: Check duration to see if the track should be scrobbled */
       /* TODO: Need to check when the user skips forward or backward in the track
         Maybe do this by tracking play pauses so that the absolute amount of
         time the user listens to a track can be recorded. */
       console.log(newState);
+    } else if (playbackChange) {
+      console.log("Amblor: playback state changed to " + newState.isPlaying);
     }
 
     this.playerState = newState;
@@ -55,6 +61,7 @@ export abstract class BaseConnector {
       album: this.getAlbumName(),
       currentDuration: durationData[0],
       totalDuration: durationData[1],
+      isPlaying: this.getIsPlaying(),
     };
   }
 
@@ -82,4 +89,6 @@ export interface PlayerState {
   // Duration is seconds
   totalDuration: number;
   currentDuration: number;
+
+  isPlaying: boolean;
 }

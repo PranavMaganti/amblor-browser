@@ -2,14 +2,19 @@ import { BaseConnector } from "./BaseConnector";
 import { timeToSeconds } from "./Util";
 
 class YoutubeMusic extends BaseConnector {
+  /* This needs to be static as it is used in the constructor */
+  private static playerSelector: string = "ytmusic-player-bar";
+
   nameSelector: string = "ytmusic-player-bar title";
   bylineSelector: string = "ytmusic-player-bar byline";
   timeSelector: string = "ytmusic-player-bar time-info";
+  playPauseSelector: string = "play-pause-button";
 
   albumHrefPattern: string = "/channel/MPREb_*";
+  pauseBtnTitle: string = "Pause";
 
   constructor() {
-    super("ytmusic-player-bar");
+    super(YoutubeMusic.playerSelector);
   }
 
   getTrackName(): string {
@@ -45,6 +50,13 @@ class YoutubeMusic extends BaseConnector {
       timeToSeconds(splitTime!![0].trim()),
       timeToSeconds(splitTime!![1].trim()),
     ];
+  }
+
+  getIsPlaying(): boolean {
+    const playPauseNode = document.getElementsByClassName(
+      this.playPauseSelector
+    )[0];
+    return playPauseNode.getAttribute("title") == this.pauseBtnTitle;
   }
 }
 

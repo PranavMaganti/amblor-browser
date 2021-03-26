@@ -33,7 +33,7 @@ function getConnectorFromUrl(url: string): ConnectorInfo | undefined {
 
 /**
  * Checks if a given tab already has a connector injected
- * 
+ *
  * @param tabId int id of the tab to send injection check message to
  * @returns a promise of true if tab has already been injected and false otherwise
  */
