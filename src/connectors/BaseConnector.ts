@@ -2,21 +2,41 @@ import { browser } from "webextension-polyfill-ts";
 import { constants } from "../Constants";
 
 export abstract class BaseConnector {
-  abstract playerSelector: string;
+  abstract getTrackName(): string;
+  abstract getArtistName(): string;
+  abstract getAlbumName(): string;
+  abstract getDurationData(): [number, number];
 
-  abstract getCurrentState(): PlayerState;
-
+  playerSelector: string;
   playerState: PlayerState = {} as PlayerState;
   playerObserver: MutationObserver = new MutationObserver(() => {
-    this.playerState = this.getCurrentState();
-    console.log(this.playerState);
+    let newState: PlayerState | undefined = undefined;
+    try {
+      newState = this.getCurrentState();
+    } catch (e) {
+      return;
+    }
+
+    if (!this.areTracksTheSame(this.playerState, newState)) {
+      /* TODO: Check duration to see if the track should be scrobbled */
+      /* TODO: Need to check when the user skips forward or backward in the track
+        Maybe do this by tracking play pauses so that the absolute amount of
+        time the user listens to a track can be recorded. */
+      console.log(newState);
+    }
+
+    this.playerState = newState;
   });
 
-  constructor() {
+  constructor(playerSelector: string) {
+    this.playerSelector = playerSelector;
+
     this.setupMessageListener();
+    this.setupObserver();
   }
 
-  setupObserver() {
+  setupObserver(): void {
+    console.log("Amblor: Setting up player observer");
     const target = document.querySelector(this.playerSelector);
     const observerConfig = {
       childList: true,
@@ -25,6 +45,26 @@ export abstract class BaseConnector {
       characterData: true,
     };
     this.playerObserver.observe(target!!, observerConfig);
+  }
+
+  getCurrentState(): PlayerState {
+    const durationData = this.getDurationData();
+    return {
+      name: this.getTrackName(),
+      artist: this.getArtistName(),
+      album: this.getAlbumName(),
+      currentDuration: durationData[0],
+      totalDuration: durationData[1],
+    };
+  }
+
+  areTracksTheSame(oldState: PlayerState, newState: PlayerState): boolean {
+    return (
+      !oldState ||
+      (oldState.name == newState.name &&
+        oldState.artist == newState.artist &&
+        oldState.album == newState.album)
+    );
   }
 
   setupMessageListener(): void {

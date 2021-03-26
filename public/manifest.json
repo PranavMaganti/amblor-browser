@@ -3,9 +3,16 @@
   "name": "amblor",
   "description": "A music scrobbling client for amblor",
   "version": "1.0.0",
-  "permissions": ["tabs", "activeTab", "<all_urls>"],
+  "permissions": ["tabs", "<all_urls>"],
   "background": {
     "scripts": ["background.js"],
     "persistent": false
+  },
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "icons": { 
+    "48": "icon48.png",
+   "128": "icon128.png" 
   }
 }

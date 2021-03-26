@@ -1,44 +1,50 @@
-import { BaseConnector, PlayerState } from "./BaseConnector";
+import { BaseConnector } from "./BaseConnector";
 import { timeToSeconds } from "./Util";
 
 class YoutubeMusic extends BaseConnector {
   nameSelector: string = "ytmusic-player-bar title";
-  artistAlbumSelector: string = "ytmusic-player-bar byline";
-  playerSelector: string = "ytmusic-player-bar";
+  bylineSelector: string = "ytmusic-player-bar byline";
   timeSelector: string = "ytmusic-player-bar time-info";
 
+  albumHrefPattern: string = "/channel/MPREb_*";
+
   constructor() {
-    super();
-    super.setupObserver();
+    super("ytmusic-player-bar");
   }
 
-  getCurrentState(): PlayerState {
-    const nameNode = document.getElementsByClassName(this.nameSelector)[0];
-    const artistAlbumNode = document.getElementsByClassName(
-      this.artistAlbumSelector
-    )[0];
-    const timeNode = document.getElementsByClassName(this.timeSelector)[0];
+  getTrackName(): string {
+    return document.getElementsByClassName(this.nameSelector)[0].textContent!!;
+  }
 
-    const splitTime = timeNode.textContent?.split("/");
-    const songInfo = [...artistAlbumNode.getElementsByTagName("a")].map(
-      (value) => value.textContent!!
+  getArtistName(): string {
+    const artistNode = document.getElementsByClassName(this.bylineSelector)[0];
+    const artists = [...artistNode.getElementsByTagName("a")].filter(
+      (value) => !RegExp(this.albumHrefPattern).test(value.href)
     );
 
-    let album = "";
+    return artists.map((value) => value.textContent!!).join(",");
+  }
 
-    // TODO: Currently assumes that there will be at least 1 item
-    let artist = songInfo.slice(0, Math.max(songInfo.length - 1, 1)).join(",")
-    if (songInfo.length != 1) {
-      album = songInfo[songInfo.length - 1];
-    }
+  getAlbumName(): string {
+    const albumNode = document.getElementsByClassName(this.bylineSelector)[0];
+    const album = [...albumNode.getElementsByTagName("a")].filter((value) =>
+      RegExp(this.albumHrefPattern).test(value.href)
+    );
 
-    return {
-      name: nameNode.textContent!!,
-      artist: artist,
-      album: album,
-      currentDuration: timeToSeconds(splitTime!![0].trim()),
-      totalDuration: timeToSeconds(splitTime!![1].trim()),
-    };
+    /* Filter should leave just the album name */
+    if (album.length != 1) return "";
+
+    return album[0].textContent!!;
+  }
+
+  getDurationData(): [number, number] {
+    const timeNode = document.getElementsByClassName(this.timeSelector)[0];
+    const splitTime = timeNode.textContent?.split("/");
+
+    return [
+      timeToSeconds(splitTime!![0].trim()),
+      timeToSeconds(splitTime!![1].trim()),
+    ];
   }
 }
 
