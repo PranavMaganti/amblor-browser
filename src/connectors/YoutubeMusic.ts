@@ -1,5 +1,5 @@
 import { BaseConnector } from "./BaseConnector";
-import { timeToSeconds } from "./Util";
+import { timeToSeconds } from "./ConnectorUtil";
 
 class YoutubeMusic extends BaseConnector {
   /* This needs to be static as it is used in the constructor */
