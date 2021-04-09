@@ -1,5 +1,5 @@
 import { browser } from "webextension-polyfill-ts";
-import { constants } from "../utils/Constants";
+import { constants } from "../utils/constants";
 
 export abstract class BaseConnector {
   abstract getTrackName(): string;

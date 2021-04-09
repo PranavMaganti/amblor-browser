@@ -2,10 +2,15 @@ import { Button } from "@material-ui/core";
 import React from "react";
 import ReactDOM from "react-dom";
 import { browser } from "webextension-polyfill-ts";
-import { getIdToken } from "./utils/Firebase";
+import {
+  clearAuthStorage,
+  getTokenIdWithRefresh,
+  storeTokenData,
+  useIdTokeExists,
+} from "./utils/firebase";
 
-var rootNode = document.getElementById("options");
-var onSignIn = async () => {
+const rootNode = document.getElementById("options");
+const onSignIn = async () => {
   const redirectURL = browser.identity.getRedirectURL();
   let authURL = "http://localhost:3000/login";
   authURL += `?response_type=token`;
@@ -23,25 +28,37 @@ var onSignIn = async () => {
   }
 
   console.log("Refresh Token: ", refreshToken);
-  const tokenData = await getIdToken(refreshToken);
-  const expiryTime =
-    Math.floor(Date.now() / 1000) + Number.parseInt(tokenData.expires_in);
-
-  /* Use provided refresh token as it may have been updated by API */
-  browser.storage.local.set({
-    id_token: tokenData.id_token,
-    refresh_token: tokenData.refresh_token,
-    expiry_time: expiryTime,
-  });
-
-  console.log(tokenData.id_token);
+  storeTokenData(await getTokenIdWithRefresh(refreshToken));
 };
+
+const onSignOut = async () => {
+  await clearAuthStorage();
+};
+
+function OptionsPage(): JSX.Element {
+  const idTokenExists = useIdTokeExists();
+
+  var button;
+  if (idTokenExists) {
+    button = (
+      <Button onClick={onSignOut} variant="contained" color="primary">
+        Sign Out
+      </Button>
+    );
+  } else {
+    button = (
+      <Button onClick={onSignIn} variant="contained" color="primary">
+        Sign In
+      </Button>
+    );
+  }
+
+  return button;
+}
 
 ReactDOM.render(
   <div>
-    <Button onClick={onSignIn} variant="contained" color="primary">
-      Sign In
-    </Button>
+    <OptionsPage></OptionsPage>
   </div>,
   rootNode
 );

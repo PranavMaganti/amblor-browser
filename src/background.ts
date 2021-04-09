@@ -1,6 +1,6 @@
 import { browser } from "webextension-polyfill-ts";
 import { ConnectorInfo, connectors } from "./utils/ConnectorInfo";
-import { constants } from "./utils/Constants";
+import { constants } from "./utils/constants";
 
 browser.tabs.onUpdated.addListener(async (id, info, tab) => {
   // Do nothing if page is not loaded or connector already injected in tab
