@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Browser, browser, Storage } from "webextension-polyfill-ts";
 import { epochSeconds } from "./common";
-import { secrets } from "./secrets";
+import { Secrets } from "../constants/Secrets";
 
 interface TokenData {
   expires_in: string;
@@ -27,7 +27,7 @@ export async function storeTokenData(tokenData: TokenData) {
   });
 }
 
-export function useIdTokeExists(): Boolean {
+export function useIdTokenExists(): Boolean {
   const [idTokenExists, setIdTokenExists] = useState(false);
 
   const storageListener = useCallback((changes, areaName) => {
@@ -66,7 +66,7 @@ export async function getIdTokenFromStorage(): Promise<string | undefined> {
     return undefined;
   }
 
-  if (rawData["expiry_time"] > epochSeconds()) {
+  if (rawData["expiry_time"] < epochSeconds()) {
     const newTokenData = await getTokenIdWithRefresh(rawData["refresh_token"]);
     storeTokenData(newTokenData);
     return newTokenData.id_token;
@@ -82,7 +82,7 @@ export async function getTokenIdWithRefresh(
   //TODO: remove refresh token from storage and show an error somewhere
   const res = await fetch(
     "https://securetoken.googleapis.com/v1/token?key=" +
-      secrets.firebase_api_key,
+      Secrets.firebase_api_key,
     {
       method: "POST",
       headers: {

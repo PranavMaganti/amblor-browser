@@ -4,4 +4,4 @@ dist
 node_modules
 package-lock.json
 
-src/utils/secrets.ts
+src/constants/Secrets.ts

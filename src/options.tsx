@@ -1,13 +1,14 @@
 import { Button } from "@material-ui/core";
-import React from "react";
+import React, { useCallback } from "react";
 import ReactDOM from "react-dom";
 import { browser } from "webextension-polyfill-ts";
 import {
   clearAuthStorage,
   getTokenIdWithRefresh,
   storeTokenData,
-  useIdTokeExists,
-} from "./utils/firebase";
+  useIdTokenExists,
+} from "./util/firebase";
+import { scrobble } from "./util/scrobble";
 
 const rootNode = document.getElementById("options");
 const onSignIn = async () => {
@@ -35,25 +36,41 @@ const onSignOut = async () => {
   await clearAuthStorage();
 };
 
-function OptionsPage(): JSX.Element {
-  const idTokenExists = useIdTokeExists();
+function SignInButton(): JSX.Element {
+  const idTokenExists = useIdTokenExists();
 
-  var button;
   if (idTokenExists) {
-    button = (
+    return (
       <Button onClick={onSignOut} variant="contained" color="primary">
         Sign Out
       </Button>
     );
   } else {
-    button = (
+    return (
       <Button onClick={onSignIn} variant="contained" color="primary">
         Sign In
       </Button>
     );
   }
+}
 
-  return button;
+function OptionsPage(): JSX.Element {
+  const testTrack = useCallback(async () => {
+    await scrobble({
+      name: "everytime",
+      artist: "Ariana Grande",
+      album: "Sweetener",
+    });
+  }, []);
+
+  return (
+    <div>
+      <SignInButton />
+      <Button onClick={testTrack} variant="contained" color="primary">
+        Send Test Track
+      </Button>
+    </div>
+  );
 }
 
 ReactDOM.render(

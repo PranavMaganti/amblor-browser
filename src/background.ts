@@ -1,10 +1,11 @@
 import { browser } from "webextension-polyfill-ts";
-import { ConnectorInfo, connectors } from "./utils/ConnectorInfo";
-import { constants } from "./utils/constants";
+import { ConnectorInfo, connectors } from "./connectors/ConnectorInfo";
+import { MessagingLabels } from "./constants/MessagingLabels";
+import { scrobble, Track } from "./util/amblor";
 
 browser.tabs.onUpdated.addListener(async (id, info, tab) => {
   // Do nothing if page is not loaded or connector already injected in tab
-  if (info.status !== constants.page_loading_complete) return;
+  if (info.status !== MessagingLabels.page_loading_complete) return;
   if (await isConnectorInjected(id)) return;
 
   // Assert url not null as permissions have been requested in manifest
@@ -13,6 +14,11 @@ browser.tabs.onUpdated.addListener(async (id, info, tab) => {
     console.log("Injecting!"); // For debugging
     browser.tabs.executeScript(id, { file: connectorInfo.file });
   }
+});
+
+browser.runtime.onMessage.addListener((track: Track) => {
+  console.log(track)
+  scrobble(track);
 });
 
 /**
@@ -39,7 +45,10 @@ function getConnectorFromUrl(url: string): ConnectorInfo | undefined {
  */
 async function isConnectorInjected(tabId: number): Promise<boolean> {
   try {
-    return await browser.tabs.sendMessage(tabId, constants.injection_check);
+    return await browser.tabs.sendMessage(
+      tabId,
+      MessagingLabels.injection_check
+    );
   } catch (e) {
     return false;
   }

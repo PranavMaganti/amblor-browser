@@ -1,5 +1,6 @@
-import { browser } from "webextension-polyfill-ts";
-import { constants } from "../utils/constants";
+import { Browser, browser, Runtime } from "webextension-polyfill-ts";
+import { MessagingLabels } from "../constants/MessagingLabels";
+import { Track } from "../util/scrobble";
 
 export abstract class BaseConnector {
   abstract getTrackName(): string;
@@ -20,28 +21,41 @@ export abstract class BaseConnector {
 
     const tracksSame = this.areTracksTheSame(this.playerState, newState);
     const playbackChange = this.playerState.isPlaying != newState?.isPlaying;
+    const newScrobble = !tracksSame || newState.currentDuration == 0;
 
-    if (!tracksSame) {
-      /* TODO: Check duration to see if the track should be scrobbled */
+    if (newScrobble) {
       /* TODO: Need to check when the user skips forward or backward in the track
         Maybe do this by tracking play pauses so that the absolute amount of
         time the user listens to a track can be recorded. */
-      console.log(newState);
+      console.log("Track:", this.playerState);
+      newState.currentDuration = 0;
+
+      if (
+        this.playerState.currentDuration >
+        this.playerState.totalDuration * 0.9
+      ) {
+        const scrobble: Track = {
+          name: this.playerState.name,
+          artist: this.playerState.artist,
+          album: this.playerState.album,
+        };
+        console.log("Scrobbling:", scrobble);
+        browser.runtime.sendMessage(scrobble);
+      }
     } else if (playbackChange) {
       console.log("Amblor: playback state changed to " + newState.isPlaying);
     }
 
-    this.playerState = newState;
+    this.playerState = newState ?? this.playerState;
   });
 
   constructor(playerSelector: string) {
     this.playerSelector = playerSelector;
-
     this.setupMessageListener();
-    this.setupObserver();
+    this.setupPlayerObserver();
   }
 
-  setupObserver(): void {
+  setupPlayerObserver(): void {
     console.log("Amblor: Setting up player observer");
     const target = document.querySelector(this.playerSelector);
     const observerConfig = {
@@ -76,7 +90,7 @@ export abstract class BaseConnector {
 
   setupMessageListener(): void {
     browser.runtime.onMessage.addListener(
-      async (data, _) => data == constants.injection_check
+      async (data, _) => data == MessagingLabels.injection_check
     );
   }
 }
