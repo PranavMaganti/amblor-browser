@@ -40,7 +40,7 @@
     "ts-jest": "^26.5.4 ",
     "ts-loader": "^9.1.1",
     "typescript": "~3.9.9 ",
-    "webextension-polyfill-ts": "^0.25.0"
+    "webextension-polyfill-ts": "^0.26.0"
   },
   "browserslist": [
     "last 3 Chrome version"
