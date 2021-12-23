@@ -1,5 +1,8 @@
-import { browser } from "webextension-polyfill-ts";
-import { ConnectorInfo, connectors } from "./connectors/ConnectorInfo";
+import browser from "webextension-polyfill";
+import {
+  ConnectorInfo,
+  connectors,
+} from "./connectors/ConnectorInfo";
 import { MessagingLabels } from "./constants/MessagingLabels";
 import { scrobble, Track } from "./util/amblor";
 
@@ -12,12 +15,15 @@ browser.tabs.onUpdated.addListener(async (id, info, tab) => {
   const connectorInfo = getConnectorFromUrl(tab.url!!);
   if (connectorInfo) {
     console.log("Injecting!"); // For debugging
-    browser.tabs.executeScript(id, { file: connectorInfo.file });
+    browser.scripting.executeScript({
+      target: { tabId: id },
+      files: [connectorInfo.file],
+    });
   }
 });
 
 browser.runtime.onMessage.addListener((track: Track) => {
-  console.log(track)
+  console.log(`SCROBBLING: ${track}`);
   scrobble(track);
 });
 

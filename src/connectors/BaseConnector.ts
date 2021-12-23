@@ -1,6 +1,6 @@
-import { Browser, browser, Runtime } from "webextension-polyfill-ts";
+import browser from "webextension-polyfill";
 import { MessagingLabels } from "../constants/MessagingLabels";
-import { Track } from "../util/scrobble";
+import { Track } from "../util/amblor";
 
 export abstract class BaseConnector {
   abstract getTrackName(): string;

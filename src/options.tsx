@@ -1,45 +1,37 @@
 import { Button } from "@material-ui/core";
-import React, { useCallback } from "react";
+import { User } from "@supabase/supabase-js";
+import React, { useCallback, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { browser } from "webextension-polyfill-ts";
-import {
-  clearAuthStorage,
-  getTokenIdWithRefresh,
-  storeTokenData,
-  useIdTokenExists,
-} from "./util/firebase";
-import { scrobble } from "./util/scrobble";
+import browser from "webextension-polyfill";
+import { scrobble } from "./util/amblor";
+import { getAuthUrl, supabase } from "./util/supabase";
 
 const rootNode = document.getElementById("options");
-const onSignIn = async () => {
-  const redirectURL = browser.identity.getRedirectURL();
-  let authURL = "http://localhost:3000/login";
-  authURL += `?response_type=token`;
-  authURL += `&redirect_uri=${encodeURIComponent(redirectURL)}`;
+const onSignIn = async (provider: string) => {
+  const redirectUrl = browser.identity.getRedirectURL();
+  const authUrl = getAuthUrl(provider, redirectUrl);
   const responseUrl = await browser.identity.launchWebAuthFlow({
     interactive: true,
-    url: authURL,
+    url: authUrl,
   });
 
-  const urlParams = new URL(responseUrl).searchParams;
+  const urlParams = new URLSearchParams(responseUrl);
   const refreshToken = urlParams.get("refresh_token");
-  if (!refreshToken) {
-    // TODO: Display error to user
-    return;
-  }
+  if (!refreshToken) return;
 
-  console.log("Refresh Token: ", refreshToken);
-  storeTokenData(await getTokenIdWithRefresh(refreshToken));
+  await supabase.auth.signIn({
+    refreshToken: refreshToken,
+  });
 };
 
 const onSignOut = async () => {
-  await clearAuthStorage();
+  await supabase.auth.signOut();
 };
 
-function SignInButton(): JSX.Element {
-  const idTokenExists = useIdTokenExists();
+function SignInButton(props: { user: User | null }): JSX.Element {
+  const { user } = props;
 
-  if (idTokenExists) {
+  if (user) {
     return (
       <Button onClick={onSignOut} variant="contained" color="primary">
         Sign Out
@@ -47,7 +39,11 @@ function SignInButton(): JSX.Element {
     );
   } else {
     return (
-      <Button onClick={onSignIn} variant="contained" color="primary">
+      <Button
+        onClick={() => onSignIn("google")}
+        variant="contained"
+        color="primary"
+      >
         Sign In
       </Button>
     );
@@ -55,17 +51,19 @@ function SignInButton(): JSX.Element {
 }
 
 function OptionsPage(): JSX.Element {
-  const testTrack = useCallback(async () => {
-    await scrobble({
-      name: "everytime",
-      artist: "Ariana Grande",
-      album: "Sweetener",
+  const testTrack = useCallback(async () => {}, []);
+  const [user, setUser] = useState(supabase.auth.user());
+
+  useEffect(() => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
     });
-  }, []);
+  });
 
   return (
     <div>
-      <SignInButton />
+      {user && <p>Logged in as: {user.email} </p>}
+      <SignInButton user={user} />
       <Button onClick={testTrack} variant="contained" color="primary">
         Send Test Track
       </Button>

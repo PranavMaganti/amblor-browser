@@ -1,6 +1,5 @@
 import axios from "axios";
 import { epochSeconds } from "./common";
-import { getIdTokenFromStorage } from "./firebase";
 
 export interface Track {
   name: string;
@@ -9,8 +8,6 @@ export interface Track {
 }
 
 export async function scrobble(track: Track) {
-  const idToken = await getIdTokenFromStorage();
-
   axios({
     method: "post",
     url: "https://amblor.herokuapp.com/api/v1/scrobble",
@@ -18,9 +15,6 @@ export async function scrobble(track: Track) {
       track_name: track.name,
       artist_name: track.artist,
       time: epochSeconds(),
-    },
-    headers: {
-      Authorization: `Bearer ${idToken}`,
     },
   });
 }

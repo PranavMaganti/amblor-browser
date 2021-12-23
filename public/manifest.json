@@ -1,19 +1,27 @@
 {
-  "manifest_version": 2,
-  "name": "amblor",
-  "description": "A music scrobbling client for amblor",
+  "manifest_version": 3,
+  "name": "Amblor",
   "version": "1.0.0",
-  "permissions": ["tabs", "identity", "storage", "<all_urls>"],
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": false
-  },
-  "browser_action": {
+  "action": {
     "default_popup": "popup.html"
   },
-  "options_page": "options.html",
-  "icons": { 
+  "description": "A music scrobbling client for amblor",
+  "icons": {
     "48": "icon48.png",
-   "128": "icon128.png" 
-  }
+    "128": "icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "tabs",
+    "identity",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://*/",
+    "https://*/"
+  ],
+  "options_page": "options.html"
 }
