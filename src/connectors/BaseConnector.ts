@@ -1,6 +1,5 @@
 import browser from "webextension-polyfill";
 import { MessagingLabels } from "../constants/MessagingLabels";
-import { Track } from "../util/amblor";
 
 export abstract class BaseConnector {
   abstract getTrackName(): string;
@@ -11,7 +10,7 @@ export abstract class BaseConnector {
 
   playerSelector: string;
   playerState: PlayerState = {} as PlayerState;
-  playerObserver: MutationObserver = new MutationObserver(() => {
+  playerObserver: MutationObserver = new MutationObserver(async () => {
     let newState: PlayerState | undefined = undefined;
     try {
       newState = this.getCurrentState();
@@ -20,27 +19,37 @@ export abstract class BaseConnector {
     }
 
     const tracksSame = this.areTracksTheSame(this.playerState, newState);
+
+    if (
+      tracksSame &&
+      newState.currentDuration == 0 &&
+      this.playerState.currentDuration == 0
+    ) {
+      return;
+    }
+
     const playbackChange = this.playerState.isPlaying != newState?.isPlaying;
-    const newScrobble = !tracksSame || newState.currentDuration == 0;
+    const initialSong = !this.playerState && newState;
+    const newSong = !tracksSame && newState;
+    const repeatSong = tracksSame && newState.currentDuration == 0;
+
+    const newScrobble = initialSong || newSong || repeatSong;
 
     if (newScrobble) {
       /* TODO: Need to check when the user skips forward or backward in the track
         Maybe do this by tracking play pauses so that the absolute amount of
         time the user listens to a track can be recorded. */
       console.log("Track:", this.playerState);
+      browser.storage.local.set({ playerState: newState });
       newState.currentDuration = 0;
 
       if (
         this.playerState.currentDuration >
         this.playerState.totalDuration * 0.9
       ) {
-        const scrobble: Track = {
-          name: this.playerState.name,
-          artist: this.playerState.artist,
-          album: this.playerState.album,
-        };
-        console.log("Scrobbling:", scrobble);
-        browser.runtime.sendMessage(scrobble);
+        const track = await browser.storage.local.get("matchedTrack");
+        console.log("Scrobbling:", track);
+        browser.runtime.sendMessage(track);
       }
     } else if (playbackChange) {
       console.log("Amblor: playback state changed to " + newState.isPlaying);
@@ -81,10 +90,9 @@ export abstract class BaseConnector {
 
   areTracksTheSame(oldState: PlayerState, newState: PlayerState): boolean {
     return (
-      !oldState ||
-      (oldState.name == newState.name &&
-        oldState.artist == newState.artist &&
-        oldState.album == newState.album)
+      oldState.name == newState.name &&
+      oldState.artist == newState.artist &&
+      oldState.album == newState.album
     );
   }
 

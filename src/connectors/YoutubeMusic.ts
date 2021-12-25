@@ -10,7 +10,7 @@ class YoutubeMusic extends BaseConnector {
   timeSelector: string = "ytmusic-player-bar time-info";
   playPauseSelector: string = "play-pause-button";
 
-  albumHrefPattern: string = "/channel/MPREb_*";
+  albumHrefPattern: string = "browse/MPREb_.*";
   pauseBtnTitle: string = "Pause";
 
   constructor() {

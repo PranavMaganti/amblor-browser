@@ -1,13 +1,11 @@
 import { Button } from "@material-ui/core";
-import { User } from "@supabase/supabase-js";
-import React, { useCallback, useEffect, useState } from "react";
+import { SupabaseClient, User } from "@supabase/supabase-js";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import ReactDOM from "react-dom";
 import browser from "webextension-polyfill";
-import { scrobble } from "./util/amblor";
-import { getAuthUrl, supabase } from "./util/supabase";
+import { createSupabaseClient, getAuthUrl } from "./util/supabase";
 
-const rootNode = document.getElementById("options");
-const onSignIn = async (provider: string) => {
+const onSignIn = async (supabase: SupabaseClient, provider: string) => {
   const redirectUrl = browser.identity.getRedirectURL();
   const authUrl = getAuthUrl(provider, redirectUrl);
   const responseUrl = await browser.identity.launchWebAuthFlow({
@@ -19,28 +17,33 @@ const onSignIn = async (provider: string) => {
   const refreshToken = urlParams.get("refresh_token");
   if (!refreshToken) return;
 
-  await supabase.auth.signIn({
-    refreshToken: refreshToken,
-  });
+  await supabase.auth.signIn({ refreshToken: refreshToken });
 };
 
-const onSignOut = async () => {
+const onSignOut = async (supabase: SupabaseClient) => {
   await supabase.auth.signOut();
 };
 
-function SignInButton(props: { user: User | null }): JSX.Element {
-  const { user } = props;
+function SignInButton(props: {
+  user: User | null;
+  supabase: SupabaseClient;
+}): JSX.Element {
+  const { user, supabase } = props;
 
   if (user) {
     return (
-      <Button onClick={onSignOut} variant="contained" color="primary">
+      <Button
+        onClick={() => onSignOut(supabase)}
+        variant="contained"
+        color="primary"
+      >
         Sign Out
       </Button>
     );
   } else {
     return (
       <Button
-        onClick={() => onSignIn("google")}
+        onClick={() => onSignIn(supabase, "google")}
         variant="contained"
         color="primary"
       >
@@ -52,18 +55,26 @@ function SignInButton(props: { user: User | null }): JSX.Element {
 
 function OptionsPage(): JSX.Element {
   const testTrack = useCallback(async () => {}, []);
-  const [user, setUser] = useState(supabase.auth.user());
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = useMemo(() => createSupabaseClient(), []);
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-    });
+    setUser(supabase.auth.user());
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      authListener?.unsubscribe();
+    };
   });
 
   return (
     <div>
       {user && <p>Logged in as: {user.email} </p>}
-      <SignInButton user={user} />
+      <SignInButton user={user} supabase={supabase} />
       <Button onClick={testTrack} variant="contained" color="primary">
         Send Test Track
       </Button>
@@ -71,9 +82,4 @@ function OptionsPage(): JSX.Element {
   );
 }
 
-ReactDOM.render(
-  <div>
-    <OptionsPage></OptionsPage>
-  </div>,
-  rootNode
-);
+ReactDOM.render(<OptionsPage />, document.getElementById("options"));

@@ -1,10 +1,9 @@
 import browser from "webextension-polyfill";
-import {
-  ConnectorInfo,
-  connectors,
-} from "./connectors/ConnectorInfo";
+import { PlayerState } from "./connectors/BaseConnector";
+import { ConnectorInfo, connectors } from "./connectors/ConnectorInfo";
 import { MessagingLabels } from "./constants/MessagingLabels";
-import { scrobble, Track } from "./util/amblor";
+import { identifyTrack } from "./util/amblor";
+import { getAccessToken } from "./util/supabase";
 
 browser.tabs.onUpdated.addListener(async (id, info, tab) => {
   // Do nothing if page is not loaded or connector already injected in tab
@@ -22,10 +21,28 @@ browser.tabs.onUpdated.addListener(async (id, info, tab) => {
   }
 });
 
-browser.runtime.onMessage.addListener((track: Track) => {
-  console.log(`SCROBBLING: ${track}`);
-  scrobble(track);
+browser.storage.onChanged.addListener(async (changes) => {
+  const accessToken = await getAccessToken();
+
+  if (!accessToken) {
+    console.log("Background Storage Listener: No access token");
+    return; // User not signed in
+  }
+
+  if ("playerState" in changes) {
+    console.log("Background Storage Listener: Player state changed");
+    const playerState = changes.playerState.newValue as PlayerState;
+    const matchedTrack = await identifyTrack(playerState, accessToken);
+
+    if (matchedTrack) {
+      browser.storage.local.set({
+        matchedTrack: matchedTrack,
+      });
+    }
+  }
 });
+
+browser.runtime.onMessage.addListener(async (message, sender) => {});
 
 /**
  * Matches a given url to its associated connector

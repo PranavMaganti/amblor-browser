@@ -1,20 +1,48 @@
-import axios from "axios";
-import { epochSeconds } from "./common";
+import { PlayerState } from "../connectors/BaseConnector";
 
-export interface Track {
+export type Album = {
+  id: string;
   name: string;
-  artist: string;
-  album?: string;
-}
+  cover_url: string;
+};
 
-export async function scrobble(track: Track) {
-  axios({
-    method: "post",
-    url: "https://amblor.herokuapp.com/api/v1/scrobble",
-    data: {
-      track_name: track.name,
-      artist_name: track.artist,
-      time: epochSeconds(),
-    },
+export type Artist = {
+  id: string;
+  name: string;
+  image_url?: string;
+  genres: string[];
+};
+
+export type Track = {
+  id: string;
+  name: string;
+  album: Album;
+  artists: Artist[];
+  preview_url: string | null;
+};
+
+export async function identifyTrack(
+  playerState: PlayerState,
+  accessToken: string
+): Promise<Track | null> {
+  const searchParams = new URLSearchParams({
+    name: playerState.name,
+    artist: playerState.artist,
   });
+  
+  const res = await fetch(
+    `https://amblor.vercel.app/api/song/identify?${searchParams}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+
+  if (res.status !== 200) {
+    return null;
+  }
+
+  return res.json();
 }
