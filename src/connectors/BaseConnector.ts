@@ -47,9 +47,11 @@ export abstract class BaseConnector {
         this.playerState.currentDuration >
         this.playerState.totalDuration * 0.9
       ) {
-        const track = await browser.storage.local.get("matchedTrack");
+        const track = (await browser.storage.local.get("matchedTrack"))[
+          "matchedTrack"
+        ];
         console.log("Scrobbling:", track);
-        browser.runtime.sendMessage(track);
+        browser.runtime.sendMessage({ type: MessagingLabels.scrobble, track });
       }
     } else if (playbackChange) {
       console.log("Amblor: playback state changed to " + newState.isPlaying);

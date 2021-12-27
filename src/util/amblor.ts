@@ -29,7 +29,7 @@ export async function identifyTrack(
     name: playerState.name,
     artist: playerState.artist,
   });
-  
+
   const res = await fetch(
     `https://amblor.vercel.app/api/song/identify?${searchParams}`,
     {

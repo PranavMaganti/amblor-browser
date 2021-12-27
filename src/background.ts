@@ -3,7 +3,7 @@ import { PlayerState } from "./connectors/BaseConnector";
 import { ConnectorInfo, connectors } from "./connectors/ConnectorInfo";
 import { MessagingLabels } from "./constants/MessagingLabels";
 import { identifyTrack } from "./util/amblor";
-import { getAccessToken } from "./util/supabase";
+import { createSupabaseClient, getAccessToken } from "./util/supabase";
 
 browser.tabs.onUpdated.addListener(async (id, info, tab) => {
   // Do nothing if page is not loaded or connector already injected in tab
@@ -42,7 +42,16 @@ browser.storage.onChanged.addListener(async (changes) => {
   }
 });
 
-browser.runtime.onMessage.addListener(async (message, sender) => {});
+browser.runtime.onMessage.addListener(async (message, sender) => {
+  const accessToken = await getAccessToken();
+  const supabase = createSupabaseClient(accessToken);
+  console.log(message);
+  if (message.type === MessagingLabels.scrobble) {
+    const { data, error } = await supabase.rpc("scrobble", {
+      _track: message.track,
+    });
+  }
+});
 
 /**
  * Matches a given url to its associated connector

@@ -57,6 +57,39 @@ function OptionsPage(): JSX.Element {
   const testTrack = useCallback(async () => {}, []);
   const [user, setUser] = useState<User | null>(null);
   const supabase = useMemo(() => createSupabaseClient(), []);
+  const test = useCallback(async () => {
+    const { data, error } = await supabase.rpc("scrobble", {
+      _track: {
+        album: {
+          cover_url:
+            "https://i.scdn.co/image/ab67616d0000b273e9d11eb596a7a7e426d81635",
+          id: "4iCcsBlzVQVZoJzxBvhuyS",
+          name: "working",
+        },
+        artists: [
+          {
+            genres: ["alt z", "dance pop", "pop", "post-teen pop"],
+            id: "45dkTj5sMRSjrmBSBeiHym",
+            image_url:
+              "https://i.scdn.co/image/ab6761610000e5ebaffed0ec7e7fefc51ca6f02f",
+            name: "Tate McRae",
+          },
+          {
+            genres: ["pop", "pop r&b"],
+            id: "6LuN9FCkKOj5PcnpouEgny",
+            image_url:
+              "https://i.scdn.co/image/ab6761610000e5eb012b37d6dec8872b18524f78",
+            name: "Khalid",
+          },
+        ],
+        id: "31sSFHIe4NaxltVFOEIcTa",
+        name: "working",
+        preview_url:
+          "https://p.scdn.co/mp3-preview/0710e4d56d230a985ef2eeb1679f2b1464418afe?cid=839e953a298e4f779e567b1fa208f40b",
+      },
+    });
+    console.log(data, error);
+  }, [supabase]);
 
   useEffect(() => {
     setUser(supabase.auth.user());
@@ -75,7 +108,13 @@ function OptionsPage(): JSX.Element {
     <div>
       {user && <p>Logged in as: {user.email} </p>}
       <SignInButton user={user} supabase={supabase} />
-      <Button onClick={testTrack} variant="contained" color="primary">
+      <Button
+        onClick={async () => {
+          await test();
+        }}
+        variant="contained"
+        color="primary"
+      >
         Send Test Track
       </Button>
     </div>

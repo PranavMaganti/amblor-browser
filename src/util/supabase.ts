@@ -22,7 +22,7 @@ const browserStorageKey = "supabase.auth.token";
 
 export const createSupabaseClient = (access_token?: string) => {
   const client = createClient(supabaseUrl, supabaseKey, {
-    fetch: fetch,
+    fetch: fetch.bind(self),
     persistSession: true,
     autoRefreshToken: true,
     localStorage: BrowserLocalStoarge,
@@ -35,7 +35,7 @@ export const createSupabaseClient = (access_token?: string) => {
   return client;
 };
 
-export async function getAccessToken(): Promise<string | null> {
+export async function getAccessToken(): Promise<string | undefined> {
   const supabaseDataRecord = await browser.storage.local.get(browserStorageKey);
   const supabaseAuthData = JSON.parse(supabaseDataRecord[browserStorageKey]);
 
@@ -55,7 +55,7 @@ export async function getAccessToken(): Promise<string | null> {
     );
 
     if (res.status !== 200) {
-      return null;
+      return undefined;
     }
 
     const body = await res.json();
