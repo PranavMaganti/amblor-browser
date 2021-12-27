@@ -1,5 +1,6 @@
 import browser from "webextension-polyfill";
 import { MessagingLabels } from "../constants/MessagingLabels";
+import { debounce } from "../util/common";
 
 export abstract class BaseConnector {
   abstract getTrackName(): string;
@@ -10,55 +11,69 @@ export abstract class BaseConnector {
 
   playerSelector: string;
   playerState: PlayerState = {} as PlayerState;
-  playerObserver: MutationObserver = new MutationObserver(async () => {
-    let newState: PlayerState | undefined = undefined;
-    try {
-      newState = this.getCurrentState();
-    } catch (e) {
-      return;
-    }
+  playerObserver: MutationObserver = new MutationObserver(
+    debounce(async () => {
+      let newState: PlayerState | undefined = undefined;
+      try {
+        newState = this.getCurrentState();
+      } catch (e) {
+        return;
+      }
 
-    const tracksSame = this.areTracksTheSame(this.playerState, newState);
+      const tracksSame = this.areTracksTheSame(this.playerState, newState);
 
-    if (
-      tracksSame &&
-      newState.currentDuration == 0 &&
-      this.playerState.currentDuration == 0
-    ) {
-      return;
-    }
+      // Catchs change of track when going to next or previous track
+      if (
+        this.playerState.currentDuration == newState.currentDuration &&
+        this.playerState.currentDuration != 0
+      ) {
+        return;
+      }
 
-    const playbackChange = this.playerState.isPlaying != newState?.isPlaying;
-    const initialSong = !this.playerState && newState;
-    const newSong = !tracksSame && newState;
-    const repeatSong = tracksSame && newState.currentDuration == 0;
+      // Catches multiple changes of track when starting new track
+      if (
+        tracksSame &&
+        newState.currentDuration == 0 &&
+        this.playerState.currentDuration == 0
+      ) {
+        return;
+      }
 
-    const newScrobble = initialSong || newSong || repeatSong;
+      const playbackChange = this.playerState.isPlaying != newState?.isPlaying;
+      const initialSong = !this.playerState && newState;
+      const newSong = !tracksSame && newState;
+      const repeatSong = tracksSame && newState.currentDuration == 0;
 
-    if (newScrobble) {
-      /* TODO: Need to check when the user skips forward or backward in the track
+      const newScrobble = initialSong || newSong || repeatSong;
+
+      if (newScrobble) {
+        /* TODO: Need to check when the user skips forward or backward in the track
         Maybe do this by tracking play pauses so that the absolute amount of
         time the user listens to a track can be recorded. */
-      console.log("Track:", this.playerState);
-      browser.storage.local.set({ playerState: newState });
-      newState.currentDuration = 0;
+        console.log("Track:", this.playerState);
+        await browser.storage.local.set({ playerState: newState });
+        newState.currentDuration = 0;
 
-      if (
-        this.playerState.currentDuration >
-        this.playerState.totalDuration * 0.9
-      ) {
-        const track = (await browser.storage.local.get("matchedTrack"))[
-          "matchedTrack"
-        ];
-        console.log("Scrobbling:", track);
-        browser.runtime.sendMessage({ type: MessagingLabels.scrobble, track });
+        if (
+          this.playerState.currentDuration >
+          this.playerState.totalDuration * 0.9
+        ) {
+          const track = (await browser.storage.local.get("matchedTrack"))[
+            "matchedTrack"
+          ];
+          console.log("Scrobbling:", track);
+          await browser.runtime.sendMessage({
+            type: MessagingLabels.scrobble,
+            track,
+          });
+        }
+      } else if (playbackChange) {
+        console.log("Amblor: playback state changed to " + newState.isPlaying);
       }
-    } else if (playbackChange) {
-      console.log("Amblor: playback state changed to " + newState.isPlaying);
-    }
 
-    this.playerState = newState ?? this.playerState;
-  });
+      this.playerState = newState ?? this.playerState;
+    })
+  );
 
   constructor(playerSelector: string) {
     this.playerSelector = playerSelector;
