@@ -5,9 +5,9 @@ import { Track } from "./util/amblor";
 
 function Popup(): JSX.Element {
   const [track, setTrack] = useState<Track | null>(null);
-  const trackChangeListener = useCallback((changes) => {
-    if ("matchedTrack" in changes) {
-      setTrack(changes.matchedTrack);
+  const trackChangeListener = useCallback(async (changes) => {
+    if ("matchedTrack" in changes && changes.matchedTrack.newValue) {
+      setTrack(changes.matchedTrack.newValue);
     }
   }, []);
 
@@ -23,7 +23,7 @@ function Popup(): JSX.Element {
   });
 
   if (!track) {
-    return <div></div>;
+    return <div>Waiting for song</div>;
   }
 
   return (
