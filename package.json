@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@material-ui/core": "^4.11.3",
-    "@supabase/supabase-js": "^1.29.1",
+    "@supabase/supabase-js": "^2.0.0",
     "react": "^17.0.1",
     "react-dom": "^17.0.1"
   },
